@@ -68,6 +68,9 @@ export default defineConfig((/* ctx */) => {
           { server: false },
         ],
       ],
+      env:{
+        API_BASE_URL: process.env.API_BASE_URL || 'https://localhost:7054'
+      }
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
@@ -91,7 +94,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [],
+      plugins: ['Notify', 'Dialog', 'Loading'],
     },
 
     // animations: 'all', // --- includes all animations
@@ -187,7 +190,7 @@ export default defineConfig((/* ctx */) => {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'tennisacademymmgt',
+        appId: 'MozartAcademy',
       },
     },
 

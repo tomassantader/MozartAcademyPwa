@@ -1,6 +1,6 @@
-# tennisacademymgmt (tennisacademymmgt)
+# MozartAcademy (MozartAcademy)
 
-FrontEnd For TennisAcademyMgmt
+FrontEnd For MozartAcademy
 
 ## Install the dependencies
 

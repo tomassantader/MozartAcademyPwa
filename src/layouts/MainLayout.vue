@@ -1,81 +1,163 @@
 <template>
   <q-layout view="lHh Lpr lFf">
+
     <q-header elevated>
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
+        <q-btn
+          flat
+          dense
+          round
+          icon="menu"
+          aria-label="Menu"
+          @click="toggleLeftDrawer"
+        />
 
-        <q-toolbar-title> Quasar App </q-toolbar-title>
+        <q-toolbar-title>
+          Mozart Academy
+        </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn
+          flat
+          dense
+          icon="logout"
+          label="Salir"
+          @click="logout"
+        />
       </q-toolbar>
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label header> Essential Links </q-item-label>
+        <q-item-label header>Menu</q-item-label>
 
-        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+        <EssentialLink
+          v-for="link in filteredLinks"
+          :key="link.tab"
+          v-bind="link"
+        />
       </q-list>
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <q-tabs
+        v-if="tabsStore.tabs.length"
+        v-model="tabsStore.activeTab"
+        dense
+        class="bg-grey-2 text-primary"
+        align="left"
+        inline-label
+      >
+        <q-tab
+          v-for="tab in tabsStore.tabs"
+          :key="tab.tab"
+          :name="tab.tab"
+          :label="tab.title"
+        >
+          <q-btn
+            dense
+            flat
+            size="sm"
+            icon="close"
+            @click.stop="tabsStore.closeTab(tab.tab)"
+          />
+        </q-tab>
+      </q-tabs>
+
+      <!-- Active view -->
+      <div class="q-pa-md">
+        <component
+          :is="activeComponent"
+          v-if="activeComponent"
+        />
+
+        <div
+          v-else
+          class="text-grey text-center q-mt-lg"
+        >
+          Seleccioná una opción del menú
+        </div>
+      </div>
     </q-page-container>
+
   </q-layout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, defineAsyncComponent} from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from 'stores/auth'
+import { useTabsStore } from 'stores/tabs'
+
+const authStore = useAuthStore()
+const tabsStore = useTabsStore()
+const router = useRouter()
+
+const leftDrawerOpen = ref(false)
+const toggleLeftDrawer = () => {
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
 
 const linksList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
+    title: 'Dashboard',
+    tab: 'dashboard',
+    icon: 'dashboard',
+    roles: ['Admin', 'User'],
+    component: defineAsyncComponent(() => 
+      import('src/pages/tabs/Dashboard/DashboardTab.vue'))
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework',
+    title: 'Calendario',
+    tab: 'calendar',
+    icon: 'calendar_month',
+    roles: ['Admin', 'User'],
+    component: defineAsyncComponent(() => 
+      import('src/pages/tabs/Calendar/CalendarTab.vue'))
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev',
+    title: 'Programacion',
+    tab: 'trainingProgram',
+    icon: 'sports_tennis',
+    roles: ['Admin'],
+    component: defineAsyncComponent(() => 
+      import('src/pages/tabs/TrainingProgram/TrainingProgramTab.vue'))
   },
   {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev',
+    title: 'Alumnos',
+    tab: 'players',
+    icon: 'groups',
+    roles: ['Admin'],
+    component: defineAsyncComponent(() => 
+      import('src/pages/tabs/Players/PlayersTab.vue'))
   },
   {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev',
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev',
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev',
-  },
+    title: 'Usuarios',
+    tab: 'users',
+    icon: 'people',
+    roles: ['Admin'],
+    component: defineAsyncComponent(() =>
+      import('src/pages/tabs/Users/UsersTab.vue'))
+  }
 ]
 
-const leftDrawerOpen = ref(false)
+const filteredLinks = computed(() => {
+  if (!authStore.user) return []
+  return linksList.filter(link =>
+    link.roles.includes(authStore.user.role)
+  )
+})
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+const activeComponent = computed(() => {
+  const tab = tabsStore.tabs.find(
+    t => t.tab === tabsStore.activeTab
+  )
+  return tab?.component || null
+})
+
+const logout = () => {
+  authStore.logout()
+  tabsStore.$reset()
+  router.push('/login')
 }
 </script>
